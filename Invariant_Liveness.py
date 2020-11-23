@@ -37,7 +37,10 @@ def Invariant_Check(n,k,init,trans,p):
  BMC for Fp
 def Invariant_Check_Fp(n_bits, threshold, init, trans, p):
     """
-    Check if there are lassoing cex to Fp of length less than threshold
+    Check if there are lassoing cex to `Fp` of length less than `threshold`. The given kripke model
+    has `n_bits` bits, `init` takes a list of z3 variables and returns a z3 expression representing
+    the initial states, `trans` takes two lists of z3 variables and returns a z3 expression
+    representing the transition relation.
     """
     s = Solver()
 
