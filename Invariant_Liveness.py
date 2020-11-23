@@ -12,7 +12,7 @@ def trans(s,s_p):
 
 #the code for checking invariant
 def Invariant_Check(n,k,init,trans,p):
-    S_N_prime = [[Bool("x_%s" % (i+1)) for i in range(n)],[Bool("x_%s_%s" %(k,i+1)) for i in range(n)]]
+    S_N_prime = [[Bool("x_%s_%s" % (k,i+1)) for i in range(n)],[Bool("x_%s_%s" %(k,i+1)) for i in range(n)]]
     s=Solver()
     s.add(And(init(S_N_prime[0]),trans(S_N_prime[0],S_N_prime[1])))
     s.add(And(Not(p(S_N_prime[0])),Not(p(S_N_prime[1]))))
