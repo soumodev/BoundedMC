@@ -77,6 +77,3 @@ def Invariant_Check_Fp(n_bits, threshold, init, trans, p):
         # Add path and cex conditions
         s.add(trans(st[k], st[k+1]))
         s.add(Not(p(st[k+1])))
-
-
-
