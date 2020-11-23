@@ -11,30 +11,40 @@ def trans(s,s_p):
     return(s[0]==s_p[0])
 
 #the code for checking invariant
+def init(s):
+    return(And(s[0]==False,s[1]==True))
+
+def p(s):
+    return(s[0]==False)
+
+def trans(s,s_p):
+    return(And(s_p[0]==Not(s[1]),s_p[1]==Not(s[1])))
+
 def Invariant_Check(n,k,init,trans,p):
-    S_N_prime = [[Bool("x_%s_%s" % (k,i+1)) for i in range(n)],[Bool("x_%s_%s" %(k,i+1)) for i in range(n)]]
+    j=k
+    S_N_prime = [[Bool("x_%s_%s" % (j-k,i+1)) for i in range(n)]]
     s=Solver()
-    s.add(And(init(S_N_prime[0]),trans(S_N_prime[0],S_N_prime[1])))
-    s.add(And(Not(p(S_N_prime[0])),Not(p(S_N_prime[1]))))
+    s.add(init(S_N_prime[0]))
+    s.push()
+    s.add(Not(p(S_N_prime[0])))
     if(s.check() == unsat):
-        i=k
-        while(k!=0):
-            S_N_prime.append([Bool("x_%s_%s" %(k-1,i+1)) for i in range(n)])
+        while(k>0):
+            s.pop()
+            print("Checking for CEX after %d transitions"%(j-k+1))
+            S_N_prime.append([Bool("x_%s_%s" %(j-k+1,i+1)) for i in range(n)])
+            s.add(trans(S_N_prime[j-k],S_N_prime[j-k+1]))
             s.push()
-            s.add(trans(S_N_prime[i-k],S_N_prime[i-k+1]))
-            s.add(Not(p(S_N_prime[i-k+1])))
-            S_N=S_N_prime
-            if(s.check == sat):
+            s.add(Not(p(S_N_prime[j-k+1])))
+            if(s.check() == sat):
                 print(s.model())
                 return "Invariant doesn't hold and there is a counterexample"
             k-=1
-            s.pop()
-        return "The invariant holds"
+        return "The invariant holds!"
     else:
         print(s.model())
         return "Invariant doesn't hold and there is a counterexample"
 
- BMC for Fp
+#BMC for Fp
 def Invariant_Check_Fp(n_bits, threshold, init, trans, p):
     """
     Check if there are lassoing cex to `Fp` of length less than `threshold`. The given kripke model
