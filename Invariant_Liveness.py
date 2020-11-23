@@ -13,23 +13,32 @@ def trans(n,s):
     return s1,s_prime
 
 #the code for checking invariant
+def init(s):
+    return(And(s[0],Not(s[1])))
+
+def p(s):
+    return(s[0]==False)
+
+def trans(s,s_p):
+    return(s[0]==s_p[0])
+
 def Invariant_Check(n,k,init,trans,p):
     S_0 = [Bool("x_%s" % (i+1)) for i in range(n)]
     s=Solver()
-    s.add(init(S_0), Not(p(S_0)))
+    s.add(init(S_0),Not(p(S_0)))
     if(s.check() == unsat):
+        s.reset()
         S_N=S_0
+        S_N_prime = [Int("x_%s_%s" %(i+1,k)) for i in range(n)]
         while(k!=0):
-            S_N_prime = [Int("x_%s_%s" %(i+1,k)) for i in range(n)]
-            solver,S_N_p = trans(n,S_N)
-            for i in range(n):
-                solver.add(S_N_prime[i]==S_N_p[i])
-            solver.add(Not(p(S_N_prime)))
-            if(solver.check == sat):
-                print(solver.model())
+            s.add(trans(S_N,S_N_prime), Not(p(S_N_prime)))
+            S_N=S_N_prime
+            if(s.check == sat):
+                print(s.model())
                 return "Invariant doesn't hold and there is a counterexample"
             k-=1
+            s.reset()
         return "The invariant holds"
-    elif(s.check() == sat):
+    else:
         print(s.model())
         return "Invariant doesn't hold and there is a counterexample"
