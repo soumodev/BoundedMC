@@ -42,3 +42,21 @@ def Invariant_Check(n,k,init,trans,p):
     else:
         print(s.model())
         return "Invariant doesn't hold and there is a counterexample"
+
+# BMC for Fp
+def Invariant_Check_Fp(n_bits, threshold, init, trans, p):
+    """
+    Check if there are lassoing cex to Fp of length less than threshold
+    """
+    s = Solver()
+
+    # The variables for the states
+    st = [[Bool('s_0_%i'%i) for i in range(n_bits)]]
+
+    # This will hold init(s0) /\ T(s0, s1)....
+    trace_expr = init(st[0])
+    # This will hold ~p(s0) /\ ...
+    pred_not_expr = Not(p(st[0]))
+    for k in range(threshold+1):
+        s.push()
+        lasso_expr = Or(And( Not(Xor(p, q)) for p, q in zip sti, st[k])
