@@ -1,25 +1,6 @@
 from z3 import *
 
-#the Kripke encoding
-def init(s):
-    return(And(s[0],Not(s[1])))
-
-def p(s):
-    return(s[0]==True)
-
-def trans(s,s_p):
-    return(s[0]==s_p[0])
-
 #the code for checking invariant
-def init(s):
-    return(And(s[0]==False,s[1]==True))
-
-def p(s):
-    return(s[0]==False)
-
-def trans(s,s_p):
-    return(And(s_p[0]==Not(s[1]),s_p[1]==Not(s[1])))
-
 def Invariant_Check(n,k,init,trans,p):
     j=k
     S_N_prime = [[Bool("x_%s_%s" % (j-k,i+1)) for i in range(n)]]
