@@ -51,12 +51,32 @@ def Invariant_Check_Fp(n_bits, threshold, init, trans, p):
     s = Solver()
 
     # The variables for the states
-    st = [[Bool('s_0_%i'%i) for i in range(n_bits)]]
+    st = [[Bool('s_0_%d'%i) for i in range(n_bits)], [Bool('s_1_%d'%i) for i in range(n_bits)]]
 
-    # This will hold init(s0) /\ T(s0, s1)....
-    trace_expr = init(st[0])
-    # This will hold ~p(s0) /\ ...
-    pred_not_expr = Not(p(st[0]))
-    for k in range(threshold+1):
+    # Add path conditions for lasso length 1
+    s.add(And(init(st[0]), trans(st[0], st[1])))
+    # Add cex conditions for lasso length 1
+    s.add(And(Not(p(st[0])), Not(p(st[1]))))
+
+    for k in range(1, threshold+1):
+        # Set backtrack point before lasso constriant
         s.push()
-        lasso_expr = Or(And( Not(Xor(p, q)) for p, q in zip sti, st[k])
+        # Add lasso expr for k
+        s.add(Or(And( Not(Xor(p, q)) for p, q in zip sti, st[k]) for sti in st[:-1]))
+        # check if cex
+        if s.check() == sat:
+            print("Found CEX of length %d:"%k)
+            print(s.model())
+            return
+        # remove lasso constraint
+        s.pop()
+
+        # Introduce new variables
+        st.append([Bool('s_%d_%s'%(k+1, i)) for i in range(n_bits)])
+        
+        # Add path and cex conditions
+        s.add(trans(st[k], st[k+1]))
+        s.add(Not(p(st[k+1])))
+
+
+
