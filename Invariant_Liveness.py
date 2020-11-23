@@ -24,12 +24,12 @@ def Invariant_Check_Gp(n,k,init,trans,p):
             s.push()
             s.add(Not(p(S_N_prime[j-k+1])))
             # DEBUG
-            print("SAT call:")
-            print(s.assertions())
+            #print("SAT call:")
+            #print(s.assertions())
             if(s.check() == sat):
                 print("Invariant doesn't hold and there is a counterexample")
                 trace_print(n, len(S_N_prime), s.model())
-                print(s.model()) # DEBUG
+                #print(s.model()) # DEBUG
                 return
             k-=1
         print("Found no counterexamples within threshhold")
@@ -37,7 +37,7 @@ def Invariant_Check_Gp(n,k,init,trans,p):
     else:
         print("Invariant doesn't hold and there is a counterexample")
         trace_print(n, 1, s.model())
-        print(s.model()) # DEBUG
+        #print(s.model()) # DEBUG
         return
 
 #BMC for Fp
@@ -88,12 +88,15 @@ from parse_to_z3 import *
 
 n_bits = 2
 init = "((!v0) . (!v1))"
-trans = "(((!u1) . v1) + ((u0 . (v0 . (u1 . (!v1)))) + (((!u0) . (v0 . (u1 . (!v1)))) \
-        + (u0 . ((!v0) . ((!u1) . (!v1)))))))"
+trans = "(((!u0) . ((!u1) . ((!v0) .   v1))) + \
+         (((!u0) . (  u1  . (  v0  . (!v1)))) + \
+         ((  u0  . ((!u1) . ((!v0) . (!v1)))) + \
+         ((  u0  . ((!u1) . (  v0  .   v1 ))) + \
+          (  u0  . (  u1  . (  v0  . (!v1))))))))"
 pred = "(v0 . v1)"
 
 Invariant_Check_Fp(n_bits, 5, parse_pred_z3_gen(init, n_bits), parse_trans_z3_gen(trans, n_bits),
         parse_pred_z3_gen(pred, n_bits))
 Invariant_Check_Gp(n_bits, 5, parse_pred_z3_gen(init, n_bits), parse_trans_z3_gen(trans, n_bits),
-        parse_pred_z3_gen("!v0", n_bits))
+        parse_pred_z3_gen("((!v0) + (!v1))", n_bits))
 
