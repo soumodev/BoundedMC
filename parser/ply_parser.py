@@ -15,8 +15,8 @@ formula : PROP
 '''
 
 import ply.yacc as yacc 
-from ply_lexer import tokens
-from formulas import *
+from parser.ply_lexer import tokens
+from parser.formulas import *
 import sys
 
 

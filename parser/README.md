@@ -21,4 +21,4 @@ print(tree.child.right.type)
 
 ```
 
-The parser was changed for usage with LTL operators.
+The parser was changed for usage with LTL operators. A `__init__.py` was also added.
