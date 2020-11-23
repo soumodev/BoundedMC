@@ -23,6 +23,9 @@ def Invariant_Check_Gp(n,k,init,trans,p):
             s.add(trans(S_N_prime[j-k],S_N_prime[j-k+1]))
             s.push()
             s.add(Not(p(S_N_prime[j-k+1])))
+            # DEBUG
+            print("SAT call:")
+            print(s.assertions())
             if(s.check() == sat):
                 print("Invariant doesn't hold and there is a counterexample")
                 trace_print(n, len(S_N_prime), s.model())
