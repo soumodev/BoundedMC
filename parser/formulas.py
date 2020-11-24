@@ -11,7 +11,8 @@ class FormulaMonadic(Formula): #Note that even ('PROP','p') is of type monadic
     self.child = child
 
   def to_tuple(self):
-    if self.type in ['PROP', 'LITERAL']:
+    if self.type in ['PROP', 'NEGPROP', 'LITERAL']: # NOTE: NEGPROP is not a token, just a special
+                                                    #       ast node type for nnf forms
       return (self.type, self.child)
     return (self.type, self.child.to_tuple())
 
@@ -22,7 +23,7 @@ class FormulaDyadic(Formula):
     self.right = right
 
   def to_tuple(self):
-    if self.type in ['PROP', 'LITERAL']:
+    if self.type in ['PROP', 'NEGPROP', 'LITERAL']:
       return (self.type, self.child)
     return (self.type, self.left.to_tuple(), self.right.to_tuple())
 
