@@ -1,7 +1,7 @@
 # from z3 import *
 
 #Could simply use namedtuples from collections instead if making these classes by hand.
-class Formula():     
+class Formula():
   def __str__(self):
     return str( self.to_tuple())
 
@@ -9,6 +9,7 @@ class FormulaMonadic(Formula): #Note that even ('PROP','p') is of type monadic
   def __init__(self, typ, child):
     self.type = typ
     self.child = child
+    self.vp = "b_%s_%s_c"%(typ, child.vp)     # A string that is unique for the expr represented
 
   def to_tuple(self):
     if self.type in ['PROP', 'NEGPROP', 'LITERAL']: # NOTE: NEGPROP is not a token, just a special
@@ -21,6 +22,7 @@ class FormulaDyadic(Formula):
     self.type = typ
     self.left = left
     self.right = right
+    self.vp = "b_%s_%s_%s_c"%(typ, left.vp, right.vp)     # A string that is unique for the expr represented
 
   def to_tuple(self):
     if self.type in ['PROP', 'NEGPROP', 'LITERAL']:
