@@ -104,3 +104,8 @@ def parse_trans_z3_gen(string, n_bits):
 #print(pred_gen([z3.Bool('u'), z3.Bool('v'), z3.Bool('w')]))
 #print(trans_gen([z3.Bool('u'), z3.Bool('v'), z3.Bool('w')], 
 #                [z3.Bool('u_'), z3.Bool('v_'), z3.Bool('w_')]))
+#
+#ctl = '((X (F v0)) U (F v0))'
+#print(parser.parse(ctl).vp)
+#print(parser.parse(ctl).left.child.vp)
+#print(parser.parse(ctl).right.vp)
