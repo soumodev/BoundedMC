@@ -75,7 +75,7 @@ def Invariant_Check_Fp(n_bits, threshold, init, trans, p):
         s.pop()
 
         # Introduce new variables
-        st.append([Bool('s_%d_%s'%(k+1, i)) for i in range(n_bits)])
+        st.append([Bool('s_%d_%d'%(k+1, i)) for i in range(n_bits)])
         
         # Add path and cex conditions
         s.add(trans(st[k], st[k+1]))
