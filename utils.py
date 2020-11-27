@@ -48,19 +48,15 @@ def ast_to_nnf(ast):
     elif ast.child.type == 'G':
         return FormulaMonadic('F', ast_to_nnf(FormulaMonadic('NOT', ast.child.child)))
     elif ast.child.type == 'U':
-        return FormulaDyadic('OR', 
-                FormulaMonadic('G', ast_to_nnf(FormulaMonadic('NOT', ast.child.right))),
-                FormulaDyadic('R', ast_to_nnf(FormulaMonadic('NOT', ast.child.left)),
-                                    ast_to_nnf(FormulaMonadic('NOT', ast.child.right))))
+        return FormulaDyadic('R', ast_to_nnf(FormulaMonadic('NOT', ast.child.left)),
+                                    ast_to_nnf(FormulaMonadic('NOT', ast.child.right)))
     elif ast.child.type == 'R':
-        return FormulaDyadic('OR', 
-                FormulaMonadic('G', ast_to_nnf(FormulaMonadic('NOT', ast.child.left))),
-                FormulaDyadic('U', ast_to_nnf(FormulaMonadic('NOT', ast.child.left)),
-                                    ast_to_nnf(FormulaMonadic('NOT', ast.child.right))))
+        return FormulaDyadic('U', ast_to_nnf(FormulaMonadic('NOT', ast.child.left)),
+                                    ast_to_nnf(FormulaMonadic('NOT', ast.child.right)))
 
 
-# DEBUG
-from parser.ply_parser import parser
-
-ast = parser.parse('!(F G !(a . (!b)))')
-print(ast_to_nnf(ast))
+## DEBUG
+#from parser.ply_parser import parser
+#
+#ast = parser.parse('!(F G !(a . (!b)))')
+#print(ast_to_nnf(ast))

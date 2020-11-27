@@ -4,8 +4,8 @@ SMT.
 """
 
 from z3 import *
-from parser.formula import *
-#######################################################################
+from parser.formulas import *
+
 def nonLooping(ast,i,k,solver,mem):
     if 'nl_%s_%d_%d'%(ast.vp,k,i) in mem:
         return
@@ -92,7 +92,6 @@ def nonLooping(ast,i,k,solver,mem):
         nonLooping(ast.right,i,k,solver,mem)
         nonLooping(ast.left,i,k,solve,mem)
 
-#######################################################################
 
 def ltl_looping_encode(start_pos, loop_pos, end_pos, ast, solver, def_vars):
     """
@@ -169,7 +168,7 @@ def ltl_looping_encode(start_pos, loop_pos, end_pos, ast, solver, def_vars):
     
     
     elif ast.type == 'X':
-        nxt_pos = start_pos+1 if start_pos<k else loop_pos
+        nxt_pos = start_pos+1 if start_pos<end_pos else loop_pos
         solver.add( Not( Xor( Bool('lp_%s_%d_%d_%d'%(ast.vp, end_pos, start_pos, loop_pos)),
                 Bool('lp_%s_%d_%d_%d'%(ast.child.vp, end_pos, nxt_pos, loop_pos)))))
         ltl_looping_encode(nxt_pos, loop_pos, end_pos, ast.child, solver, def_vars)
@@ -185,7 +184,7 @@ def ltl_looping_encode(start_pos, loop_pos, end_pos, ast, solver, def_vars):
             ltl_looping_encode(start_pos, loop_pos, end_pos, ast.child, solver, def_vars)
             ltl_looping_encode(start_pos+1, loop_pos, end_pos, ast, solver, def_vars)
         
-        elif start_pos = loop_pos:
+        elif start_pos == loop_pos:
             # In this case we loop-expand
             solver.add( Not( Xor( Bool('lp_%s_%d_%d_%d'%(ast.vp, end_pos, start_pos, loop_pos)),
                 And([ Bool('lp_%s_%d_%d_%d'%(ast.child.vp, end_pos, i, loop_pos))
@@ -209,7 +208,7 @@ def ltl_looping_encode(start_pos, loop_pos, end_pos, ast, solver, def_vars):
             ltl_looping_encode(start_pos, loop_pos, end_pos, ast.child, solver, def_vars)
             ltl_looping_encode(start_pos+1, loop_pos, end_pos, ast, solver, def_vars)
         
-        elif start_pos = loop_pos:
+        elif start_pos == loop_pos:
             # In this case we loop-expand
             solver.add( Not( Xor( Bool('lp_%s_%d_%d_%d'%(ast.vp, end_pos, start_pos, loop_pos)),
                 Or([ Bool('lp_%s_%d_%d_%d'%(ast.child.vp, end_pos, i, loop_pos))
@@ -296,7 +295,7 @@ def ltl_looping_encode(start_pos, loop_pos, end_pos, ast, solver, def_vars):
                 ltl_looping_encode(n, loop_pos, end_pos, ast.left, solver, def_vars)
                            
 
-   elif ast.type == 'R':
+    elif ast.type == 'R':
         # Now, to encode R, we add two new sets of variables:
         # auxRik_ast.vp_k_i_l = \/j=i->k (l[f]j,k /\n=i->j l[g]n,k)
         # auxRli_ast.vp_k_i_l = \/j=l->(i-1) (l[f]j,k /\n=l->j l[g]n,k)
@@ -322,7 +321,7 @@ def ltl_looping_encode(start_pos, loop_pos, end_pos, ast, solver, def_vars):
                 # Recursive case
                 solver.add( Not( Xor( Bool(this_vname),
                         Or(And( Bool('lp_%s_%d_%d_%d'%(ast.left.vp, k, i, l)),
-                                Bool('lp_%s_%d_%d_%d'%(ast.right.vp, k, i, l)))
+                                Bool('lp_%s_%d_%d_%d'%(ast.right.vp, k, i, l))),
                            And( Bool('lp_%s_%d_%d_%d'%(ast.right.vp, k, i, l)),
                                 Bool('auxrik_%s_%d_%d_%d'%(ast.vp, k, i+1, l)))))))
                 ltl_looping_encode(i, l, k, ast.right, solver, def_vars)
@@ -381,6 +380,44 @@ def ltl_looping_encode(start_pos, loop_pos, end_pos, ast, solver, def_vars):
      
 
 
+# DEBUG
 
+from parser.ply_parser import *
+from utils import *
+from parse_to_z3 import *
 
-       
+init = "((!v0) . (!v1))"
+trans = "(((!u0) . ((!u1) . ((!v0) .   v1))) + \
+         (((!u0) . (  u1  . (  v0  . (!v1)))) + \
+         ((  u0  . ((!u1) . ((!v0) . (!v1)))) + \
+         ((  u0  . ((!u1) . (  v0  .   v1 ))) + \
+          (  u0  . (  u1  . (  v0  . (!v1))))))))"
+
+ltl_expr = '((!v0) U (G (F v1)))'
+solver = Solver()
+ast = ast_to_nnf(parser.parse(ltl_expr))
+def_vars = set()
+ltl_looping_encode(0, 2, 4, ast, solver, def_vars)
+print(solver)
+
+init_gen = parse_pred_z3_gen(init, 2)
+trans_gen = parse_trans_z3_gen(trans, 2)
+
+# 4-long path
+solver.add(init_gen([Bool('s_0_0'), Bool('s_0_1')]))
+solver.add(trans_gen([Bool('s_0_0'), Bool('s_0_1')], [Bool('s_1_0'), Bool('s_1_1')]))
+solver.add(trans_gen([Bool('s_1_0'), Bool('s_1_1')], [Bool('s_2_0'), Bool('s_2_1')]))
+solver.add(trans_gen([Bool('s_2_0'), Bool('s_2_1')], [Bool('s_3_0'), Bool('s_3_1')]))
+solver.add(trans_gen([Bool('s_3_0'), Bool('s_3_1')], [Bool('s_4_0'), Bool('s_4_1')]))
+# loops back to 2
+solver.add(Not(Xor(Bool('s_2_0'), Bool('s_4_0'))))
+solver.add(Not(Xor(Bool('s_2_1'), Bool('s_4_1'))))
+
+# Formula is true
+solver.add(Bool('lp_%s_%d_%d_%d'%(ast.vp, 4, 0, 2)))
+
+# Check
+print(solver.check())
+mdl = solver.model()
+print(mdl)
+trace_print(2, 5, mdl)
