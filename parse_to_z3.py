@@ -104,19 +104,3 @@ def parse_trans_z3_gen(pred, n_bits):
 
     return rec_get_z3_gen(ast)
 
-#DEBUG
-
-#pred = '(v0 + (v1.v2))'
-#trans = '(u0 + (u1.v1))'
-#
-#pred_gen = parse_pred_z3_gen(pred, 3)
-#trans_gen = parse_trans_z3_gen(trans, 3)
-#
-#print(pred_gen([z3.Bool('u'), z3.Bool('v'), z3.Bool('w')]))
-#print(trans_gen([z3.Bool('u'), z3.Bool('v'), z3.Bool('w')], 
-#                [z3.Bool('u_'), z3.Bool('v_'), z3.Bool('w_')]))
-#
-#ctl = '((X (F v0)) U (F v0))'
-#print(parser.parse(ctl).vp)
-#print(parser.parse(ctl).left.child.vp)
-#print(parser.parse(ctl).right.vp)

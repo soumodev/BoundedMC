@@ -57,8 +57,3 @@ def ast_to_nnf(ast):
                                     ast_to_nnf(FormulaMonadic('NOT', ast.child.right)))
 
 
-## DEBUG
-#from parser.ply_parser import parser
-#
-#ast = parser.parse('!(F G !(a . (!b)))')
-#print(ast_to_nnf(ast))

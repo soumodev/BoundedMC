@@ -34,13 +34,9 @@ def Invariant_Check_Gp(n,k,init,trans,p):
             s.add(trans(S_N_prime[j-k],S_N_prime[j-k+1]))
             s.push()
             s.add(Not(p(S_N_prime[j-k+1])))
-            # DEBUG
-            #print("SAT call:")
-            #print(s.assertions())
             if(s.check() == sat):
                 print("Invariant doesn't hold and there is a counterexample             ")
                 trace_print(n, len(S_N_prime), s.model())
-                #print(s.model()) # DEBUG
                 return
             k-=1
         print("Found no counterexamples within threshold                                ")
@@ -48,7 +44,6 @@ def Invariant_Check_Gp(n,k,init,trans,p):
     else:
         print("Invariant doesn't hold and there is a counterexample                     ")
         trace_print(n, 1, s.model())
-        #print(s.model()) # DEBUG
         return
 
 #BMC for Fp
@@ -70,7 +65,6 @@ def Invariant_Check_Fp(n_bits, threshold, init, trans, p):
     s.add(And(Not(p(st[0])), Not(p(st[1]))))
 
     for k in range(1, threshold+1):
-        # DEBUG
         print("Looking for cex of size %d"%k, end='\r')
 
         # Check for each loop position
