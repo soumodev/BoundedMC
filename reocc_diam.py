@@ -1,5 +1,8 @@
 """
-Defines functions to find the reoccurrence diameter of a given Kripke model
+Defines functions to find the reoccurrence diameter of a given Kripke model.
+
+Command line usage:
+    python reocc_diam.py <specification_file>
 """
 
 from z3 import *
@@ -35,14 +38,19 @@ def get_reocc_diam(n_bits, init, trans):
         # New state is unique
         s.add(And([ Or([ Xor(a, b) for a, b in zip(sti, st[rd]) ]) for sti in st[:-1] ]))
         
-# DEBUG
 if __name__ == "__main__":
+    import sys
     from parse_to_z3 import *
+    from parser.ply_parser import *
+    from parser.formulas import *
 
-    n_bits = 2
-    init = "((!v0) . (!v1))"
-    trans = "(((!u1) . v1) + ((u0 . (v0 . (u1 . (!v1)))) + (((!u0) . (v0 . (u1 . (!v1)))) \
-            + (u0 . ((!v0) . ((!u1) . (!v1)))))))"
-    pred = "(v0 . v1)"
+       # Read spec file
+    n_bits, init_str, trans_str, prop_strs = 0, '', '', []
+    with open(sys.argv[1]) as f:
+        n_bits, init_str, trans_str, prop_strs = eval(f.read())
+    
+    # Parse system
+    init_z3_gen = parse_pred_z3_gen(init_str, n_bits)
+    trans_z3_gen = parse_trans_z3_gen(trans_str, n_bits)
 
-    print(get_reocc_diam(n_bits, parse_pred_z3_gen(init, n_bits), parse_trans_z3_gen(trans, n_bits)))
+    print("The reoccurrence diameter is %d"%get_reocc_diam(n_bits, init_z3_gen, trans_z3_gen))
