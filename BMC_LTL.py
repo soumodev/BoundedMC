@@ -1,3 +1,8 @@
+from z3 import *
+from ltl_encode import *
+from utils import *
+
+
 def BMC_LTL(n,threshold,init,trans,ast):
   s_i = [Bool('s_0_%d'%(i)) for i in range(n)]
   s=Solver()
@@ -21,4 +26,4 @@ def BMC_LTL(n,threshold,init,trans,ast):
       if s.check() == sat:
         return trace_print(n,k,ast)
       s.pop()
-      s.add(Trans(s_i[k],s_i[k+1]))
+    s.add(Trans(s_i[k],s_i[k+1]))
