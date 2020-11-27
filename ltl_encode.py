@@ -329,8 +329,8 @@ def ltl_looping_encode(start_pos, loop_pos, end_pos, ast, solver, def_vars):
         # auxRik_ast.vp_k_i_l = \/j=i->k (l[f]j,k /\n=i->j l[g]n,k)
         # auxRli_ast.vp_k_i_l = \/j=l->(i-1) (l[f]j,k /\n=l->j l[g]n,k)
         # then, we will have 
-        # l[fUg]i,k = auxuik_ast.vp_k_i_l \/ (auxuli_ast.vp_k_i_l /\n=i->k l[g]n,k) \/ l[Gg]i,k if i > l
-        # l[fUg]i,k = auxuik_ast.vp_k_i_l \/ l[Gg]i,k                                          otherwise
+        # l[fRg]i,k = auxrik_ast.vp_k_i_l \/ (auxrli_ast.vp_k_i_l /\n=i->k l[g]n,k) \/ l[Gg]i,k if i > l
+        # l[fRg]i,k = auxrik_ast.vp_k_i_l \/ l[Gg]i,k                                          otherwise
         #
         # We define helper functions to encode these variables
         def auxrik_encode(i, l, k, ast, solver, def_vars):
@@ -388,21 +388,21 @@ def ltl_looping_encode(start_pos, loop_pos, end_pos, ast, solver, def_vars):
         gg_ast = FormulaMonadic('G', ast.right)
         gg_var = Bool('lp_%s_%d_%d_%d'%(gg_ast.vp, end_pos, start_pos, loop_pos))
         if start_pos <= loop_pos:
-            # l[fUg]i,k = auxuik_ast.vp_k_i_l \/ l[Gg]i,k                                          
+            # l[fRg]i,k = auxrik_ast.vp_k_i_l \/ l[Gg]i,k                                          
             solver.add( Bool(this_var) ==
                     Or( Bool('auxrik_%s_%d_%d_%d'%(ast.vp, end_pos, start_pos, loop_pos)),
                         gg_var))
             auxrik_encode(start_pos, loop_pos, end_pos, ast, solver, def_vars)
             ltl_looping_encode(start_pos, loop_pos, end_pos, gg_ast, solver, def_vars)
         else:
-            # l[fUg]i,k = auxuik_ast.vp_k_i_l \/ (auxuli_ast.vp_k_i_l /\n=i->k l[g]n,k) \/ l[Gg]i,k
+            # l[fRg]i,k = auxrik_ast.vp_k_i_l \/ (auxrli_ast.vp_k_i_l /\n=i->k l[g]n,k) \/ l[Gg]i,k
             solver.add( Bool(this_var) == 
-                    Or( Bool('auxuik_%s_%d_%d_%d'%(ast.vp, end_pos, start_pos, loop_pos)), gg_var, 
-                        And( Bool('auxuli_%s_%d_%d_%d'%(ast.vp, end_pos, start_pos, loop_pos)),
+                    Or( Bool('auxrik_%s_%d_%d_%d'%(ast.vp, end_pos, start_pos, loop_pos)), gg_var, 
+                        And( Bool('auxrli_%s_%d_%d_%d'%(ast.vp, end_pos, start_pos, loop_pos)),
                         And([ Bool('lp_%s_%d_%d_%d'%(ast.left.vp, end_pos, n, loop_pos))
                                             for n in range(start_pos, end_pos+1) ]))))
-            auxuik_encode(start_pos, loop_pos, end_pos, ast, solver, def_vars)
-            auxuli_encode(start_pos, loop_pos, end_pos, ast, solver, def_vars)
+            auxrik_encode(start_pos, loop_pos, end_pos, ast, solver, def_vars)
+            auxrli_encode(start_pos, loop_pos, end_pos, ast, solver, def_vars)
             ltl_looping_encode(start_pos, loop_pos, end_pos, gg_ast, solver, def_vars)
             for n in range(start_pos, end_pos+1):
                 ltl_looping_encode(n, loop_pos, end_pos, ast.left, solver, def_vars)

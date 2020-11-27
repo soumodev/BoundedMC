@@ -11,6 +11,7 @@ class FormulaMonadic(Formula): #Note that even ('PROP','p') is of type monadic
     self.child = child
     # A string that is unique for the expr represented
     self.vp = "b_%s_%s_c"%(typ, child.vp if isinstance(child, Formula) else child)
+    self.size = 1 + (self.child.size if isinstance(child, Formula) else 0)
 
   def to_tuple(self):
     if self.type in ['PROP', 'NEGPROP', 'LITERAL']: # NOTE: NEGPROP is not a token, just a special
@@ -26,7 +27,8 @@ class FormulaDyadic(Formula):
     # A string that is unique for the expr represented
     self.vp = "b_%s_%s_%s_c"%(typ, left.vp if isinstance(left, Formula) else left,
                                     right.vp if isinstance(right, Formula) else right)
-
+    self.size = 1 + (self.left.size  if isinstance(left,  Formula) else 0) \
+                  + (self.right.size if isinstance(right, Formula) else 0)
 
   def to_tuple(self):
     if self.type in ['PROP', 'NEGPROP', 'LITERAL']:
