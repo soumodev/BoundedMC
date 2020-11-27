@@ -73,7 +73,7 @@ def nonLooping(ast,i,k,solver,mem):
           nonLooping(ast.left,j,k,solve,mem)
           nonLooping(ast.right,j,k,solve.mem)
 
-    elif ast.type == "U":
+    elif ast.type == "R":
         z = Bool("UManip_%s_%d_%d",%(ast.vp,k,i))
         g_ik = [Bool("nl_%s_%d_%d",%(ast.right.vp,k,i)) for j in range(i,k+1)]
         f_ik = [Bool("nl_%s_%d_%d",%(ast.left.vp,k,j)) for j in range(i,k+1)]
