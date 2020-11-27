@@ -17,17 +17,17 @@ def nonLooping(ast,i,k,solver,mem):
         mem.add(Bool("nl_%s_%d_%d"%(ast.vp,k,i)))
     
     if ast.type == "PROP":
-        z = Bool("nl_s_%d_%d_"%(ast.vp,k,i))
+        z = Bool("nl_%s_%d_%d_"%(ast.vp,k,i))
         p=Bool("s_%d_%d"%(int(node.child[1:])))
         solver.add(z==p)
 
     elif ast.type == "NEGPROP":
-        z = Bool("nl_s_%d_%d"%(ast.vp,k,i))
+        z = Bool("nl_%s_%d_%d"%(ast.vp,k,i))
         p=Bool("s_%d_%d"%(int(node.child[1:])))
         solver.add(z==Not(p))
 
     elif ast.type == "LITERAL":
-        z = Bool("nl_s_%d_%d"%(ast.vp,k,i))
+        z = Bool("nl_%s_%d_%d"%(ast.vp,k,i))
         solver.add(z==ast.child)
 
     elif ast.type =="OR":
@@ -56,7 +56,7 @@ def nonLooping(ast,i,k,solver,mem):
         nonLooping(ast.child,i,k,solver,mem)
 
     elif ast.type == "G":
-        z = Bool("%s_%d_%d"%(ast.vp,k,i))
+        z = Bool("nl_%s_%d_%d"%(ast.vp,k,i))
         solver.add(z==False)
 
     elif ast.type == "F":
@@ -75,7 +75,7 @@ def nonLooping(ast,i,k,solver,mem):
           nonLooping(ast.child,i,k,solver,mem)
       
     elif ast.type == "U":
-        z = Bool("UManip_%s_%d_%d"%(ast.vp,k,i))
+        z = Bool("nl_%s_%d_%d"%(ast.vp,k,i))
         g_ik = Bool("nl_%s_%d_%d"%(ast.right.vp,k,i))
         f_ik = Bool("nl_%s_%d_%d"%(ast.left.vp,k,i))
         z_next = Bool("nl_%s_%d_%d"%(ast.vp,k,i+1))
@@ -92,7 +92,7 @@ def nonLooping(ast,i,k,solver,mem):
           nonLooping(ast.right,i,k,solver,mem)
           
     elif ast.type == "R":
-        z = Bool("UManip_%s_%d_%d"%(ast.vp,k,i))
+        z = Bool("nl_%s_%d_%d"%(ast.vp,k,i))
         g_ik = Bool("nl_%s_%d_%d"%(ast.right.vp,k,i))
         f_ik = Bool("nl_%s_%d_%d"%(ast.left.vp,k,i))
         z_next = Bool("nl_%s_%d_%d"%(ast.vp,k,i+1))
@@ -104,9 +104,9 @@ def nonLooping(ast,i,k,solver,mem):
             solver.add(z==Or(g_ik,f_ik))
           else:
             solver.add(z==Or(f_ik,And(g_ik,z_next)))
-            nonLooping(ast.left,i,k,solve,mem)
             nonLooping(ast,i+1,k,solver,mem)
           nonLooping(ast.right,i,k,solver,mem)
+          nonLooping(ast.left,i,k,solve,mem)
 
 #######################################################################
 
