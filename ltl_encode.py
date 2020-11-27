@@ -87,8 +87,8 @@ def nonLooping(ast,i,k,solver,mem):
             solver.add(z==g_ik)
           else:
             solver.add(z==Or(g_ik,And(f_ik,z_next)))
-            nonLooping(ast.left,i,k,solve,mem)
             nonLooping(ast,i+1,k,solver,mem)
+          nonLooping(ast.left,i,k,solve,mem)
           nonLooping(ast.right,i,k,solver,mem)
           
     elif ast.type == "R":
