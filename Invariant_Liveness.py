@@ -1,3 +1,14 @@
+"""
+BMC loop for safety and simple liveness properties, that is, properties of the form Fp and Gp, where
+p has no LTL operators.
+
+Command line usage:
+    python Invariant_Liveness.py <spec_file> [threshold]
+
+    Check the specificiation given in the file `spec_file`. If `threshold` is provided, run BMC loop
+    upto the given threshold, else use the reoccurrence diameter as the threshold
+"""
+
 from z3 import *
 from utils import *
 
@@ -18,7 +29,7 @@ def Invariant_Check_Gp(n,k,init,trans,p):
     if(s.check() == unsat):
         while(k>0):
             s.pop()
-            print("Checking for CEX after %d transitions"%(j-k+1))
+            print("Checking for CEX after %d transitions"%(j-k+1), end='\r')
             S_N_prime.append([Bool("s_%d_%d" %(j-k+1,i)) for i in range(n)])
             s.add(trans(S_N_prime[j-k],S_N_prime[j-k+1]))
             s.push()
@@ -27,15 +38,15 @@ def Invariant_Check_Gp(n,k,init,trans,p):
             #print("SAT call:")
             #print(s.assertions())
             if(s.check() == sat):
-                print("Invariant doesn't hold and there is a counterexample")
+                print("Invariant doesn't hold and there is a counterexample             ")
                 trace_print(n, len(S_N_prime), s.model())
                 #print(s.model()) # DEBUG
                 return
             k-=1
-        print("Found no counterexamples within threshhold")
+        print("Found no counterexamples within threshold                                ")
         return
     else:
-        print("Invariant doesn't hold and there is a counterexample")
+        print("Invariant doesn't hold and there is a counterexample                     ")
         trace_print(n, 1, s.model())
         #print(s.model()) # DEBUG
         return
@@ -60,19 +71,21 @@ def Invariant_Check_Fp(n_bits, threshold, init, trans, p):
 
     for k in range(1, threshold+1):
         # DEBUG
-        print("Looking for cex of size %d"%k)
+        print("Looking for cex of size %d"%k, end='\r')
 
-        # Set backtrack point before lasso constriant
-        s.push()
-        # Add lasso expr for k
-        s.add(Or([ And([ Not(Xor(p, q)) for p, q in zip (sti, st[k]) ]) for sti in st[:-1] ]))
-        # check if cex
-        if s.check() == sat:
-            print("Found CEX of length %d:"%k)
-            trace_print(n_bits, k+1, s.model())
-            return
-        # remove lasso constraint
-        s.pop()
+        # Check for each loop position
+        for i in range(k):
+            # Set backtrack point before lasso constriant
+            s.push()
+            # Add lasso position
+            s.add(And([ p == q for p, q in zip (st[i], st[k]) ]))
+            # check if cex
+            if s.check() == sat:
+                print("Found CEX of length %d with last state being the same as %d         "%(k, i))
+                trace_print(n_bits, k+1, s.model(), i)
+                return
+            # remove lasso constraint
+            s.pop()
 
         # Introduce new variables
         st.append([Bool('s_%d_%d'%(k+1, i)) for i in range(n_bits)])
@@ -83,20 +96,40 @@ def Invariant_Check_Fp(n_bits, threshold, init, trans, p):
 
     print("Found no counterexamples within the threshold")
 
-# DEBUG
-from parse_to_z3 import *
 
-n_bits = 2
-init = "((!v0) . (!v1))"
-trans = "(((!u0) . ((!u1) . ((!v0) .   v1))) + \
-         (((!u0) . (  u1  . (  v0  . (!v1)))) + \
-         ((  u0  . ((!u1) . ((!v0) . (!v1)))) + \
-         ((  u0  . ((!u1) . (  v0  .   v1 ))) + \
-          (  u0  . (  u1  . (  v0  . (!v1))))))))"
-pred = "(v0 . v1)"
+if __name__ == "__main__":
+    
+    import sys
+    from parse_to_z3 import *
+    from parser.ply_parser import *
+    from parser.formulas import *
 
-Invariant_Check_Fp(n_bits, 5, parse_pred_z3_gen(init, n_bits), parse_trans_z3_gen(trans, n_bits),
-        parse_pred_z3_gen(pred, n_bits))
-Invariant_Check_Gp(n_bits, 5, parse_pred_z3_gen(init, n_bits), parse_trans_z3_gen(trans, n_bits),
-        parse_pred_z3_gen("((!v0) + (!v1))", n_bits))
+       # Read spec file
+    n_bits, init_str, trans_str, prop_strs = 0, '', '', []
+    with open(sys.argv[1]) as f:
+        n_bits, init_str, trans_str, prop_strs = eval(f.read())
+    
+    # Parse system
+    init_z3_gen = parse_pred_z3_gen(init_str, n_bits)
+    trans_z3_gen = parse_trans_z3_gen(trans_str, n_bits)
 
+    # Get threshold
+    if len(sys.argv) >= 3:
+        threshold = int(sys.argv[2])
+    else:
+        from reocc_diam import *
+        threshold = get_reocc_diam(n_bits, init_z3_gen, trans_z3_gen)
+        print('Using reoccurrence diameter %d as threshold'%threshold)
+
+    # Parse and check properties
+    for prop_str in prop_strs:
+        print('Checking property %s:'%prop_str)
+        prop_ast = parser.parse(prop_str)
+        if prop_ast.type == 'F':
+            print('Property is a simple liveness property')
+            Invariant_Check_Fp(n_bits, threshold, init_z3_gen, trans_z3_gen, 
+                                parse_pred_z3_gen(prop_ast.child, n_bits))
+        elif prop_ast.type == 'G':
+            print('Property is a simple safety property')
+            Invariant_Check_Gp(n_bits, threshold, init_z3_gen, trans_z3_gen, 
+                                parse_pred_z3_gen(prop_ast.child, n_bits))

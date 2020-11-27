@@ -8,9 +8,9 @@ from parser.ply_parser import parser
 from parser.formulas import *
 import z3
 
-def parse_pred_z3_gen(string, n_bits):
+def parse_pred_z3_gen(pred, n_bits):
     """
-    Parses the given string representation of a predicate over `n_bits` to a function generating a
+    Parses the given string or ast representation of a predicate over `n_bits` to a function generating a
     z3 expression from a set of given z3 variables. The predicate must be a not use any LTL
     operators, and the propositional variables used must be of the form `vi`, referring to the
     predicate where `i`-th bit is true. All other connectives allowed in the LTL expression grammar
@@ -18,7 +18,12 @@ def parse_pred_z3_gen(string, n_bits):
     of length exactly `n_bits`, any other length will result in index errors.
     """
 
-    ast = parser.parse(string)
+    if type(pred) == str:
+        ast = parser.parse(pred)
+    elif isinstance(pred, Formula):
+        ast = pred
+    else:
+        raise "Can only parse strings and ast to z3 expression generators"
     
     # Recursively generate the [z3_var] -> z3_expr function from an ast
     def rec_get_z3_gen(node):
@@ -47,9 +52,9 @@ def parse_pred_z3_gen(string, n_bits):
 
     return rec_get_z3_gen(ast)
 
-def parse_trans_z3_gen(string, n_bits):
+def parse_trans_z3_gen(pred, n_bits):
     """
-    Parses the given string representation of a transition relation over `n_bits` to a function generating a
+    Parses the given string or ast representation of a transition relation over `n_bits` to a function generating a
     z3 expression from a set of given z3 variables. The transition relation must be a not use any LTL
     operators, and the propositional variables used must be of the form `ui`, referring to the
     transition relation which holds whenever the `i`-th bit of the left state is true, and `vi`,
@@ -59,7 +64,13 @@ def parse_trans_z3_gen(string, n_bits):
     any other length will result in index errors.
     """
 
-    ast = parser.parse(string)
+    if type(pred) == str:
+        ast = parser.parse(pred)
+    elif isinstance(pred, Formula):
+        ast = pred
+    else:
+        raise "Can only parse strings and ast to z3 expression generators"
+    
     
     # Recursively generate the [z3_var] -> z3_expr function from an ast
     def rec_get_z3_gen(node):

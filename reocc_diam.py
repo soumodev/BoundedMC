@@ -36,12 +36,13 @@ def get_reocc_diam(n_bits, init, trans):
         s.add(And([ Or([ Xor(a, b) for a, b in zip(sti, st[rd]) ]) for sti in st[:-1] ]))
         
 # DEBUG
-from parse_to_z3 import *
+if __name__ == "__main__":
+    from parse_to_z3 import *
 
-n_bits = 2
-init = "((!v0) . (!v1))"
-trans = "(((!u1) . v1) + ((u0 . (v0 . (u1 . (!v1)))) + (((!u0) . (v0 . (u1 . (!v1)))) \
-        + (u0 . ((!v0) . ((!u1) . (!v1)))))))"
-pred = "(v0 . v1)"
+    n_bits = 2
+    init = "((!v0) . (!v1))"
+    trans = "(((!u1) . v1) + ((u0 . (v0 . (u1 . (!v1)))) + (((!u0) . (v0 . (u1 . (!v1)))) \
+            + (u0 . ((!v0) . ((!u1) . (!v1)))))))"
+    pred = "(v0 . v1)"
 
-print(get_reocc_diam(n_bits, parse_pred_z3_gen(init, n_bits), parse_trans_z3_gen(trans, n_bits)))
+    print(get_reocc_diam(n_bits, parse_pred_z3_gen(init, n_bits), parse_trans_z3_gen(trans, n_bits)))
