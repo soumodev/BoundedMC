@@ -14,12 +14,12 @@ def nonLooping(ast,i,k,solver,mem):
     
     if ast.type == "PROP":
         z = Bool("nl_%s_%d_%d_"%(ast.vp,k,i))
-        p=Bool("s_%d_%d"%(int(node.child[1:])))
+        p=Bool("s_%d_%d"%(k, int(ast.child[1:])))
         solver.add(z==p)
 
     elif ast.type == "NEGPROP":
         z = Bool("nl_%s_%d_%d"%(ast.vp,k,i))
-        p=Bool("s_%d_%d"%(int(node.child[1:])))
+        p=Bool("s_%d_%d"%(k, int(ast.child[1:])))
         solver.add(z==Not(p))
 
     elif ast.type == "LITERAL":
@@ -382,42 +382,51 @@ def ltl_looping_encode(start_pos, loop_pos, end_pos, ast, solver, def_vars):
 
 # DEBUG
 
-from parser.ply_parser import *
-from utils import *
-from parse_to_z3 import *
-
-init = "((!v0) . (!v1))"
-trans = "(((!u0) . ((!u1) . ((!v0) .   v1))) + \
-         (((!u0) . (  u1  . (  v0  . (!v1)))) + \
-         ((  u0  . ((!u1) . ((!v0) . (!v1)))) + \
-         ((  u0  . ((!u1) . (  v0  .   v1 ))) + \
-          (  u0  . (  u1  . (  v0  . (!v1))))))))"
-
-ltl_expr = '((!v0) U (G (F v1)))'
-solver = Solver()
-ast = ast_to_nnf(parser.parse(ltl_expr))
-def_vars = set()
-ltl_looping_encode(0, 2, 4, ast, solver, def_vars)
-print(solver)
-
-init_gen = parse_pred_z3_gen(init, 2)
-trans_gen = parse_trans_z3_gen(trans, 2)
-
-# 4-long path
-solver.add(init_gen([Bool('s_0_0'), Bool('s_0_1')]))
-solver.add(trans_gen([Bool('s_0_0'), Bool('s_0_1')], [Bool('s_1_0'), Bool('s_1_1')]))
-solver.add(trans_gen([Bool('s_1_0'), Bool('s_1_1')], [Bool('s_2_0'), Bool('s_2_1')]))
-solver.add(trans_gen([Bool('s_2_0'), Bool('s_2_1')], [Bool('s_3_0'), Bool('s_3_1')]))
-solver.add(trans_gen([Bool('s_3_0'), Bool('s_3_1')], [Bool('s_4_0'), Bool('s_4_1')]))
-# loops back to 2
-solver.add(Not(Xor(Bool('s_2_0'), Bool('s_4_0'))))
-solver.add(Not(Xor(Bool('s_2_1'), Bool('s_4_1'))))
-
-# Formula is true
-solver.add(Bool('lp_%s_%d_%d_%d'%(ast.vp, 4, 0, 2)))
-
-# Check
-print(solver.check())
-mdl = solver.model()
-print(mdl)
-trace_print(2, 5, mdl)
+#from parser.ply_parser import *
+#from utils import *
+#from parse_to_z3 import *
+#
+#init = "((!v0) . (!v1))"
+#trans = "(((!u0) . ((!u1) . ((!v0) .   v1))) + \
+#         (((!u0) . (  u1  . (  v0  . (!v1)))) + \
+#         ((  u0  . ((!u1) . ((!v0) . (!v1)))) + \
+#         ((  u0  . ((!u1) . (  v0  .   v1 ))) + \
+#          (  u0  . (  u1  . (  v0  . (!v1))))))))"
+#
+#ltl_expr = 'F ((!v1).(X v1))'
+#solver = Solver()
+#ast = ast_to_nnf(parser.parse(ltl_expr))
+#def_vars = set()
+#nonLooping(ast, 0, 3, solver, def_vars)
+#print(solver)
+#
+#init_gen = parse_pred_z3_gen(init, 2)
+#trans_gen = parse_trans_z3_gen(trans, 2)
+#
+## upto 3 path
+#solver.add(init_gen([Bool('s_0_0'), Bool('s_0_1')]))
+#solver.add(trans_gen([Bool('s_0_0'), Bool('s_0_1')], [Bool('s_1_0'), Bool('s_1_1')]))
+#solver.add(trans_gen([Bool('s_1_0'), Bool('s_1_1')], [Bool('s_2_0'), Bool('s_2_1')]))
+#solver.add(trans_gen([Bool('s_2_0'), Bool('s_2_1')], [Bool('s_3_0'), Bool('s_3_1')]))
+#
+## Non looping condition
+#for i in range(0, 4):
+#    for j in range(0, i):
+#        solver.add(Not(And( (Bool('s_%d_0'%i) == Bool('s_%d_0'%j)),
+#                            (Bool('s_%d_1'%i) == Bool('s_%d_1'%j)))))
+#
+#
+### loops back to 2
+##solver.add(Not(Xor(Bool('s_2_0'), Bool('s_4_0'))))
+##solver.add(Not(Xor(Bool('s_2_1'), Bool('s_4_1'))))
+#
+#print(solver)
+#
+## Formula is true
+#solver.add(Bool('nl_%s_%d_%d'%(ast.vp, 4, 0)))
+#
+## Check
+#print(solver.check())
+#mdl = solver.model()
+#print(mdl)
+#trace_print(2, 4, mdl)
