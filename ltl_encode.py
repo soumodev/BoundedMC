@@ -5,6 +5,86 @@ SMT.
 
 from z3 import *
 from parser.formula import *
+#######################################################################
+from z3 import *
+from ply_parser import *
+
+def nonLooping(ast,i,k,solver,mem):
+    if Bool("nl_%s_%d_%d",%(ast.vp,k,i)) in mem:
+        return
+    else:
+        mem.add(Bool("nl_%s_%d_%d",%(ast.vp,k,i)))
+    
+    if ast.type == "PROP":
+        z = Bool("nl_s_%d_%d_",%(ast.vp,k,i))
+        p=Bool("s_%d_%d",%(int(node.child[1:])))
+        solver.add(z==p)
+
+    elif ast.type == "NEGPROP":
+        z = Bool("nl_s_%d_%d",%(ast.vp,k,i))
+        p=Bool("s_%d_%d",%(int(node.child[1:])))
+        solver.add(z==Not(p))
+
+    elif ast.type == "LITERAL":
+        z = Bool("nl_s_%d_%d",%(ast.vp,k,i))
+        solver.add(z==ast.child)
+
+    elif ast.type =="OR":
+        z = Bool("nl_%s_%d_%d",%(ast.vp,k,i))
+        x = Bool("nl_%s_%d_%d",%(ast.left.vp,k,i))
+        y = Bool("nl_%s_%d_%d",%(ast.right.vp,k,i))
+        solver.add(z==Or(x,y))
+        nonLooping(ast.left,i,k,solver,mem)
+        nonLooping(ast.right,i,k,solver,mem)
+
+    elif ast.type =="AND":
+        z = Bool("nl_%s_%d_%d",%(ast.vp,k,i))
+        x = Bool("nl_%s_%d_%d",%(ast.left.vp,k,i))
+        y = Bool("nl_%s_%d_%d",%(ast.right.vp,k,i))
+        solver.add(z==And(x,y))
+        nonLooping(ast.left,i,k,solver,mem)
+        nonLooping(ast.right,i,k,solver,mem)
+
+    elif ast.type == "X":
+        z = Bool("nl_%s_%d_%d",%(ast.vp,k,i))
+        if(i < k):
+          x = Bool("nl_%s_%d_%d",%(ast.child.vp,k,i+1))
+          solver.add(z==x)
+        else:
+            solver.add(z==False)
+        nonLooping(ast.child,i,k,solver,mem)
+
+    elif ast.type == "G":
+        z = Bool("%s_%d_%d",%(ast.vp,k,i))
+        solver.add(z==False)
+
+    elif ast.type == "F":
+        z = Bool("nl_%s_%d_%d",%(ast.vp,k,i))
+        x = [Bool("nl_%s_%d_%d",%(ast.child.vp,k,j)) for j in range(i,k+1)]
+        solver.add(z==Or(x))
+        for j in range(i,k+1):
+          nonLooping(ast.child,j,k,solver,mem)
+    
+    elif ast.type == "U":
+        z = Bool("UManip_%s_%d_%d",%(ast.vp,k,i))
+        g_ik = [Bool("nl_%s_%d_%d",%(ast.right.vp,k,i)) for j in range(i,k+1)]
+        f_ik = [Bool("nl_%s_%d_%d",%(ast.left.vp,k,j)) for j in range(i,k)]
+        solver.add(x==Or(And(g_ik),And(f_ik))))
+        nonLooping(ast.right,k,k,solve,mem)
+        for j in range(i,k):
+          nonLooping(ast.left,j,k,solve,mem)
+          nonLooping(ast.right,j,k,solve.mem)
+
+    elif ast.type == "U":
+        z = Bool("UManip_%s_%d_%d",%(ast.vp,k,i))
+        g_ik = [Bool("nl_%s_%d_%d",%(ast.right.vp,k,i)) for j in range(i,k+1)]
+        f_ik = [Bool("nl_%s_%d_%d",%(ast.left.vp,k,j)) for j in range(i,k+1)]
+        solver.add(x==Or(And(f_ik),And(g_ik))))
+        for j in range(i,k+1):
+          nonLooping(ast.left,j,k,solve,mem)
+          nonLooping(ast.right,j,k,solve.mem)
+
+#######################################################################
 
 def ltl_looping_encode(start_pos, loop_pos, end_pos, ast, solver, def_vars):
     """
