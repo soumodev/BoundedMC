@@ -6,8 +6,6 @@ SMT.
 from z3 import *
 from parser.formula import *
 #######################################################################
-from z3 import *
-from ply_parser import *
 
 def nonLooping(ast,i,k,solver,mem):
     if Bool("nl_%s_%d_%d",%(ast.vp,k,i)) in mem:
