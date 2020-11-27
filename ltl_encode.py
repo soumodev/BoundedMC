@@ -7,6 +7,9 @@ from z3 import *
 from parser.formula import *
 #######################################################################
 
+from z3 import *
+from formulas import *
+
 def nonLooping(ast,i,k,solver,mem):
     if Bool('nl_%s_%d_%d'%(ast.vp,k,i)) in mem:
         return
@@ -58,29 +61,52 @@ def nonLooping(ast,i,k,solver,mem):
 
     elif ast.type == "F":
         z = Bool("nl_%s_%d_%d"%(ast.vp,k,i))
-        x = [Bool("nl_%s_%d_%d"%(ast.child.vp,k,j)) for j in range(i,k+1)]
-        solver.add(z==Or(x))
-        for j in range(i,k+1):
-          nonLooping(ast.child,j,k,solver,mem)
-    
+        x = Bool("nl_%s_%d_%d"%(ast.child.vp,k,i))
+        z_next = Bool("nl_%s_%d_%d"%(ast.vp,k,i+1))
+        if z in mem:
+          return
+        else:
+          mem.add(z)
+          if i == k:
+            solver.add(z==x)
+          elif i < k:
+            solver.add(z==Or(x,z_next))
+            nonLooping(ast,i+1,k,solver,mem)
+          nonLooping(ast.child,i,k,solver,mem)
+      
     elif ast.type == "U":
         z = Bool("UManip_%s_%d_%d"%(ast.vp,k,i))
-        g_ik = [Bool("nl_%s_%d_%d"%(ast.right.vp,k,i)) for j in range(i,k+1)]
-        f_ik = [Bool("nl_%s_%d_%d"%(ast.left.vp,k,j)) for j in range(i,k)]
-        solver.add(x==Or(And(g_ik),And(f_ik)))
-        nonLooping(ast.right,k,k,solve,mem)
-        for j in range(i,k):
-          nonLooping(ast.left,j,k,solve,mem)
-          nonLooping(ast.right,j,k,solve.mem)
-
+        g_ik = Bool("nl_%s_%d_%d"%(ast.right.vp,k,i))
+        f_ik = Bool("nl_%s_%d_%d"%(ast.left.vp,k,i))
+        z_next = Bool("nl_%s_%d_%d"%(ast.vp,k,i+1))
+        if z in mem:
+          return
+        else:
+          mem.add(z)
+          if i == k:
+            solver.add(z==g_ik)
+          else:
+            solver.add(z==Or(g_ik,And(f_ik,z_next)))
+            nonLooping(ast.left,i,k,solve,mem)
+            nonLooping(ast,i+1,k,solver,mem)
+          nonLooping(ast.right,i,k,solver,mem)
+          
     elif ast.type == "R":
         z = Bool("UManip_%s_%d_%d"%(ast.vp,k,i))
-        g_ik = [Bool("nl_%s_%d_%d"%(ast.right.vp,k,i)) for j in range(i,k+1)]
-        f_ik = [Bool("nl_%s_%d_%d"%(ast.left.vp,k,j)) for j in range(i,k+1)]
-        solver.add(x==Or(And(f_ik),And(g_ik)))
-        for j in range(i,k+1):
-          nonLooping(ast.left,j,k,solve,mem)
-          nonLooping(ast.right,j,k,solve.mem)
+        g_ik = Bool("nl_%s_%d_%d"%(ast.right.vp,k,i))
+        f_ik = Bool("nl_%s_%d_%d"%(ast.left.vp,k,i))
+        z_next = Bool("nl_%s_%d_%d"%(ast.vp,k,i+1))
+        if z in mem:
+          return
+        else:
+          mem.add(z)
+          if i == k:
+            solver.add(z==Or(g_ik,f_ik))
+          else:
+            solver.add(z==Or(f_ik,And(g_ik,z_next)))
+            nonLooping(ast.left,i,k,solve,mem)
+            nonLooping(ast,i+1,k,solver,mem)
+          nonLooping(ast.right,i,k,solver,mem)
 
 #######################################################################
 
