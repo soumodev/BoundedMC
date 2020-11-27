@@ -1,3 +1,10 @@
+"""
+Uses k-induction to check for the correctness of simple safety properties. Properties must be of the
+form Gp, where p has no LTL operators.
+
+Command line usage:
+    python K_induction.py <specification_file>
+"""
 from z3 import *
 from utils import *
 
@@ -13,45 +20,51 @@ def K_induction(n,init,trans,p):
         k=1
         while(True):
             s.pop()
-            print("Checking for CEX after %d transitions"%(k))
+            print("Checking for CEX after %d transitions"%(k), end='\r')
             S_N_prime.append([Bool("s_%s_%s" % (k,i)) for i in range(n)])
             s.add(And(p(S_N_prime[k-1]),trans(S_N_prime[k-1],S_N_prime[k])))
             s.push()
-            #print(s) #DEBUG
             s.add(Not(p(S_N_prime[k])))
             if(s.check()==unsat):
-                print("Verified, p is %d-inductive"%k)
+                print("Verified, p is %d-inductive                                          "%k)
                 return
             s1.pop()
             s1.add(trans(S_N_prime[k-1],S_N_prime[k]))
             s1.push()
             s1.add(Not(p(S_N_prime[k])))
             if(s1.check()==sat):
-                print("CounterExample")
+                print("CounterExample                                                       ")
                 trace_print(n, len(S_N_prime), s.model())
                 return
             k+=1
-        return "The invariant holds!"
+        print("The invariant holds                                                          ")
     else:
-        print("Invariant doesn't hold and there is a counterexample")
+        print("Invariant doesn't hold and there is a counterexample                         ")
         trace_print(n, 1, s.model())
         return
 
 
-# DEBUG
-from parse_to_z3 import *
+if __name__ == "__main__":
+    
+    import sys
+    from parse_to_z3 import *
+    from parser.ply_parser import *
+    from parser.formulas import *
 
-n_bits = 2
-init = "((!v0) . (!v1))"
-trans = "(((!u0) . ((!u1) . ((!v0) .   v1))) + \
-         (((!u0) . (  u1  . (  v0  . (!v1)))) + \
-         ((  u0  . ((!u1) . ((!v0) . (!v1)))) + \
-         ((  u0  . ((!u1) . (  v0  .   v1 ))) + \
-          (  u0  . (  u1  . (  v0  . (!v1))))))))"
-pred = "!(v0 . v1)"
+    # Read spec file
+    n_bits, init_str, trans_str, prop_strs = 0, '', '', []
+    with open(sys.argv[1]) as f:
+        n_bits, init_str, trans_str, prop_strs = eval(f.read())
+    
+    # Parse system
+    init_z3_gen = parse_pred_z3_gen(init_str, n_bits)
+    trans_z3_gen = parse_trans_z3_gen(trans_str, n_bits)
 
-K_induction(n_bits, parse_pred_z3_gen(init, n_bits), parse_trans_z3_gen(trans, n_bits),
-        parse_pred_z3_gen(pred, n_bits))
-K_induction(n_bits, parse_pred_z3_gen(init, n_bits), parse_trans_z3_gen(trans, n_bits),
-        parse_pred_z3_gen("tru", n_bits))
-
+    # Parse and check properties
+    for prop_str in prop_strs:
+        print('Checking property %s:'%prop_str)
+        prop_ast = parser.parse(prop_str)
+        if prop_ast.type == 'G':
+            K_induction(n_bits, init_z3_gen, trans_z3_gen, parse_pred_z3_gen(prop_ast.child, n_bits))
+        else:
+            print('Property is not of Gp form, ignoring')

@@ -133,3 +133,5 @@ if __name__ == "__main__":
             print('Property is a simple safety property')
             Invariant_Check_Gp(n_bits, threshold, init_z3_gen, trans_z3_gen, 
                                 parse_pred_z3_gen(prop_ast.child, n_bits))
+        else:
+            print('Property is not of Fp or Gp form, ignoring')
