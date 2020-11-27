@@ -6,15 +6,11 @@ SMT.
 from z3 import *
 from parser.formula import *
 #######################################################################
-
-from z3 import *
-from formulas import *
-
 def nonLooping(ast,i,k,solver,mem):
-    if Bool('nl_%s_%d_%d'%(ast.vp,k,i)) in mem:
+    if 'nl_%s_%d_%d'%(ast.vp,k,i) in mem:
         return
     else:
-        mem.add(Bool("nl_%s_%d_%d"%(ast.vp,k,i)))
+        mem.add('nl_%s_%d_%d'%(ast.vp,k,i))
     
     if ast.type == "PROP":
         z = Bool("nl_%s_%d_%d_"%(ast.vp,k,i))
@@ -63,50 +59,38 @@ def nonLooping(ast,i,k,solver,mem):
         z = Bool("nl_%s_%d_%d"%(ast.vp,k,i))
         x = Bool("nl_%s_%d_%d"%(ast.child.vp,k,i))
         z_next = Bool("nl_%s_%d_%d"%(ast.vp,k,i+1))
-        if z in mem:
-          return
-        else:
-          mem.add(z)
-          if i == k:
-            solver.add(z==x)
-          elif i < k:
-            solver.add(z==Or(x,z_next))
-            nonLooping(ast,i+1,k,solver,mem)
-          nonLooping(ast.child,i,k,solver,mem)
-      
+        if i == k:
+          solver.add(z==x)
+        elif i < k:
+          solver.add(z==Or(x,z_next))
+          nonLooping(ast,i+1,k,solver,mem)
+        nonLooping(ast.child,i,k,solver,mem)
+    
     elif ast.type == "U":
         z = Bool("nl_%s_%d_%d"%(ast.vp,k,i))
         g_ik = Bool("nl_%s_%d_%d"%(ast.right.vp,k,i))
         f_ik = Bool("nl_%s_%d_%d"%(ast.left.vp,k,i))
         z_next = Bool("nl_%s_%d_%d"%(ast.vp,k,i+1))
-        if z in mem:
-          return
+        if i == k:
+          solver.add(z==g_ik)
         else:
-          mem.add(z)
-          if i == k:
-            solver.add(z==g_ik)
-          else:
-            solver.add(z==Or(g_ik,And(f_ik,z_next)))
-            nonLooping(ast,i+1,k,solver,mem)
-          nonLooping(ast.left,i,k,solve,mem)
-          nonLooping(ast.right,i,k,solver,mem)
-          
+          solver.add(z==Or(g_ik,And(f_ik,z_next)))
+          nonLooping(ast,i+1,k,solver,mem)
+        nonLooping(ast.left,i,k,solve,mem)
+        nonLooping(ast.right,i,k,solver,mem)
+        
     elif ast.type == "R":
         z = Bool("nl_%s_%d_%d"%(ast.vp,k,i))
         g_ik = Bool("nl_%s_%d_%d"%(ast.right.vp,k,i))
         f_ik = Bool("nl_%s_%d_%d"%(ast.left.vp,k,i))
         z_next = Bool("nl_%s_%d_%d"%(ast.vp,k,i+1))
-        if z in mem:
-          return
+        if i == k:
+          solver.add(z==Or(g_ik,f_ik))
         else:
-          mem.add(z)
-          if i == k:
-            solver.add(z==Or(g_ik,f_ik))
-          else:
-            solver.add(z==Or(f_ik,And(g_ik,z_next)))
-            nonLooping(ast,i+1,k,solver,mem)
-          nonLooping(ast.right,i,k,solver,mem)
-          nonLooping(ast.left,i,k,solve,mem)
+          solver.add(z==Or(f_ik,And(g_ik,z_next)))
+          nonLooping(ast,i+1,k,solver,mem)
+        nonLooping(ast.right,i,k,solver,mem)
+        nonLooping(ast.left,i,k,solve,mem)
 
 #######################################################################
 
