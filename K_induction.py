@@ -37,7 +37,7 @@ def K_induction(n,init,trans,p):
                 trace_print(n, len(S_N_prime), s.model())
                 return
             k+=1
-        print("The invariant holds                                                          ")
+        print("The invariant could not be proved                                            ")
     else:
         print("Invariant doesn't hold and there is a counterexample                         ")
         trace_print(n, 1, s.model())
